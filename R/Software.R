@@ -31,16 +31,6 @@
 #' (2) record the model specifications
 #' }
 #'
-#' library(purrr)
-library(tmvtnorm)
-library(mvtnorm)
-library(LaplacesDemon)
-library(truncnorm)
-library(purrr)
-library(MASS)
-library(dplyr)
-library(tidyr)
-library(data.table)
 #' @import tmvtnorm
 #' @import mvtnorm
 #' @import LaplacesDemon
