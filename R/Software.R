@@ -1,4 +1,4 @@
-#' Fit Gaussian mixture copula and impute missing data
+#' Fit Gaussian mixture copula with the margin adjustment and impute missing data
 #'
 #' The user specifies this and that
 #' @param Data Data frame that is the input into the Gaussian Mixture Copula. Categorical and  binary variables should be factors
@@ -30,7 +30,26 @@
 #' (1) track the parameters across EM iterations and
 #' (2) record the model specifications
 #' }
-
+#'
+#' library(purrr)
+library(tmvtnorm)
+library(mvtnorm)
+library(LaplacesDemon)
+library(truncnorm)
+library(purrr)
+library(MASS)
+library(dplyr)
+library(tidyr)
+library(data.table)
+#' @import tmvtnorm
+#' @import mvtnorm
+#' @import LaplacesDemon
+#' @import truncnorm
+#' @import purrr
+#' @import MASS
+#' @import dplyr
+#' @import tidyr
+#' @import data.table
 #' @export
 #'
 #' @examples
