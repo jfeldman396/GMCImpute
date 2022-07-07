@@ -1,0 +1,24 @@
+Package: GMCImpute
+Title: Estimate A Gaussian mixture copula, impute Missing Data, abd simulate predictive data sets
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Joe",
+           family = "Felddman",
+           role = c("aut", "cre"),
+           email = "jrf11@rice.edu",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: T
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    tmvtnorm,
+    mvtnorm,
+    tidyr,
+    dplyr,
+    LaplacesDemon,
+    truncnorm,
+    purrr,
+    MASS,
+    data.table
+RoxygenNote: 7.1.0
