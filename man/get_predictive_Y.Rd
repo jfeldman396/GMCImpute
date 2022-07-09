@@ -2,7 +2,7 @@
 % Please edit documentation in R/Software.R
 \name{get_predictive_Y}
 \alias{get_predictive_Y}
-\title{Henerate a Posterior Predictive Data Set}
+\title{Generate a posterior predictive data set}
 \usage{
 get_predictive_Y(
   n,
@@ -20,15 +20,89 @@ get_predictive_Y(
   H,
   Y,
   z,
-  Fns
+  Fns,
+  seed = NULL
 )
 }
 \arguments{
-\item{Fns}{}
+\item{\code{n}:}{number of observations in posterior predictive data set}
+
+\item{\code{Lambda}:}{Posterior sample of factor loadings}
+
+\item{\code{mu}:}{List of length H containing posterior sample cluster specific mean vectors for latent factor \eqn{\eta}}
+
+\item{\code{Delta}:}{List of length H containing posterior sample of cluster specific covariance matrices for latent factor \eqn{\eta}}
+
+\item{\code{pi_h}:}{Posterior sample of cluster membership probabilities}
+
+\item{\code{col_mem}:}{array of length p containing variable names}
+
+\item{\code{cat_col_names}:}{array containing names of categorical variables, with the number of repititions indicating eachs' number of levels}
+
+\item{\code{bin_col_names}:}{array containing names of binary variables}
+
+\item{\code{count_col_names}:}{array containing names of count-valued variables}
+
+\item{\code{cont_col_names}:}{array containing names of continous variables}
+
+\item{\code{dat}:}{Original data frame, useful for simulating predictive data sets}
+
+\item{\code{H}:}{Upper bound for the number of clusters in finite mixture}
+
+\item{\code{Y}:}{Original data set}
+
+\item{\code{z}:}{Posterior sample of populated clusters, should be <= H}
+
+\item{\code{Fns}:}{Posterior sample of marginal distributions}
+
+\item{\code{seed}:}{seed for replication}
 }
 \value{
-
+\itemize{
+\item \code{Y_pred}: Posterior predictive data set of specified size, \emph{with} margin adjustment
+\item \code{Y_pred_noMA}: Posterior predictive data set of specified size, \emph{without} margin adjustment. Empirical estimates are used in this case.}
 }
 \description{
-Henerate a Posterior Predictive Data Set
+Utilize posterior samples of Gaussian mixture copula parameters to generate a posterior
+predictive data set for missing data inference
+}
+\examples{
+imps<-GMC_Impute(Data = X, nsamp = 1000)
+mu = lapply(1:25, function(x) return(imps$mus[[x]][500,]))
+alpha = rep(0,3)
+Delta = lapply(1:25, function(x) return(imps$Deltas[[x]][500,,]))
+Lambda = imps$Lambdas[500,,]
+pi_h = imps$pis[500,]
+Sigma.diag= imps$Sigmas[500,]
+col_mem = imps$col_mem
+cat_col_names = imps$cat_col_names
+bin_col_names = imps$bin_col_names
+count_col_names = imps$count_col_names
+cont_col_names = imps$con_col_names
+H = 25
+X= imps$dat
+z = imps$zs[500,]
+Fns = vector('list', 3)
+for(i in 1:3){ #formulate margin estimate
+ support = imps$Support[[i]][500,]
+ qs = imps$Quantiles[[i]][500,]
+ Fj = cbind(support,rep(0,length(support)),qs)
+ Fns[[i]] = Fj
+}
+Y = imps$dat
+H =25
+pred<- get_predictive_Y(n = dim(X)[1],
+                       Lambda,
+                       mu,
+                       alpha,
+                       Delta,
+                       pi_h,
+                       Sigma.diag,
+                       col_mem,
+                       cat_col_names, bin_col_names, count_col_names,cont_col_names,
+                       H,
+                       Y,
+                       z = z,
+                       Fns)
+plot(pred$Y_pred)
 }

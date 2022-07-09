@@ -1,34 +1,55 @@
 #' Fit Gaussian mixture copula with the margin adjustment and impute missing data
 #'
-#' The user specifies this and that
+#' Fit the Gaussian mixture copula to a data set with or without missing data.
+#' Return posterior samples of model parameters as well optional multiple imputations
 #' @param Data Data frame that is the input into the Gaussian Mixture Copula. Categorical and  binary variables should be factors
-#' @param nImp Number of Imputations to Create
+#' @param nImp Number of imputations to Create
 #' @param Impute logical; Whether or not to create multiple imputations
 #' @param H Upper bound for the number of components of the mixtures
 #' @param k.star Dimension of latent factor in mixture
 #' @param nsamp Number of samples for the MCMC
 #' @param burn Number of burn-in samples before imputations
-#' @param hyperparams Hyper parameter specifications
+#' @param hyperparams Optional; Hyperparameter specifications for finite mixuture and RPL
+#'  with default values given by:
+#' \itemize{
+#' \item \code{k.star}: dimension of latent factors, default is \code{floor(.7*p))}
+#' \item \code{plugin.threshold}: threshold for number of unique values in each column for the re-sampling step to be conducted,
+#' default is 350
+#' \item \code{a_alpha}: prior for the stick breaking precision parameter, where the prior is given by \code{gamma(a_alpha,b_alpha)},
+#' default value is 1
+#' \item \code{b_alpha}: prior for the stick breaking precision parameter, where the prior is given by \code{gamma(a_alpha,b_alpha)},
+#' default value is 3
+#' \item \code{nu_mix}: hyper parameter for the component specific prior \eqn{N-IW(0,I_{k.star},nu_mix,kappa_0)} on \eqn{\eta},
+#' default is k.star +2
+#' \item \code{kappa_0}: hyper parameter for the component specific prior \eqn{N-IW(0,I_{k.star},nu_mix,kappa_0)} on \eqn{\eta},
+#' default is .001
+#' \item \code{nu}: hyper parameter for local shrinkage of MGP prior on components of Lambda, default is 3
+#' \item \code{a1}: hyper parameter for global shrinkage of MGP prior on components of Lambda, default is 2
+#' \item \code{a2}: hyper parameter for global shrinkage of MGP prior on components of Lambda, default is 3
+#' \item \code{a.sigma,b.sigma}: hyper parameter for gamma prior on error variance, default value is 1 and 0.3
+#' \item \code{delta}: prior precision parameter for covariance matrix in latent mixture. Increase to discover fewer clusters.
+#' default value is 10
+#' \item \code{D_0}: prior covariance for N-IW. Default is a k.star dimenional identity
+#' }
 
 #'
-#' @return a list with the following elements:
+#' @return A list with the following elements:
 #' \itemize{
 #' \item \code{Imputations} nImp complete data sets
-#' \item \code{Deltas} List of length H, each containing an Nsamp - burn x k.star x k.star array of
+#' \item \code{Deltas}: List of length H, each containing an \code{(nsamp - burn x k.star x k.star)} array of
 #'  posterior samples of cluster specific covariance matrices
-#' \item \code{mus} List of length H, each containing an Nsamp-burn x k.star array of posterior samples of cluster
+#' \item \code{mus}: List of length H, each containing an \code{(nsamp-burn x k.star)} array of posterior samples of cluster
 #' specific covariance matrices
-#' \item \code{Sigmas} array of dimension (nsamp-burn x p)  containing posterior samples of the error covariance
-#' \item \code{Quantiles} List of length p, each containing an array of dimension (nsamp-burn x length(support)) with posterior samplees
-#' \item \code{z.hat} the estimated latent data (on the transformed scale) at the MLEs
-#' \item \code{residuals} the Dunn-Smyth residuals (randomized)
-#' \item \code{residuals_rep} the Dunn-Smyth residuals (randomized) for 10 replicates
-#' \item \code{logLik} the log-likelihood at the MLEs
-#' \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
-#' \item \code{lambda} the Box-Cox nonlinear parameter
-#' \item and other parameters that
-#' (1) track the parameters across EM iterations and
-#' (2) record the model specifications
+#' \item \code{Sigmas}: array of dimension \code{(nsamp-burn x p)} containing posterior samples of the error covariance
+#' \item \code{Quantiles}:List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with posterior samples of point-wise cumulative probabilities.
+#' \item \code{Support}: List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with support of each variable
+#' \item \code{col_mem}: array of length p containing variable names
+#' \item \code{cat_col_names}: array containing names of categorical variables, with the number of repititions indicating eachs' number of levels
+#' \item \code{bin_col_names}: array containing names of binary variables
+#' \item \code{count_col_names}: array containing names of count-valued variables
+#' \item \code{cont_col_names}: array containing names of continous variables
+#' \item \code{dat}: Original data frame, useful for simulating predictive data sets
+#' \item \code{seed}: Seed for replication of results
 #' }
 #'
 #' @import tmvtnorm
@@ -56,13 +77,18 @@
 
 
 GMC_Impute<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 10000, burn = floor(.5*nsamp),
-                      hyperparams = NULL){
+                      hyperparams = NULL, seed = NULL){
 
   if(any(sapply(colnames(Data), function(x) is.character(Data[,x])))){
     stop('Nominal variables must be factors')
   }
-  if(!any(apply(Data, 2, function(x) any(is.na(x))))){
-    stop('No null values in the data frame!')
+
+  if(is.null(seed)){
+
+    seed = sample(1,100000,1)
+    set.seed(seed)
+  }else{
+    set.seed(seed)
   }
 
 
@@ -455,7 +481,9 @@ GMC_Impute<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp =
     if(ns%%100 == 0 ){
       cat(round(100 * ns/nsamp), "percent done ", date(),
           "\n")
+      print(paste("Current number of clusters/occupancy:"))
       print(table(z))
+
 
     }
 
@@ -594,40 +622,108 @@ GMC_Impute<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp =
               cat_col_names = cat_col_names,
               bin_col_names = bin_col_names,
               count_col_names = count_col_names,
-              con_col_names = cont_col_names,
-              dat = Y))
+              cont_col_names = cont_col_names,
+              dat = Y,
+              seed = seed))
 
 
 }
 
 
-#' Henerate a Posterior Predictive Data Set
+
+#' Generate a posterior predictive data set
 #'
-#' @param n
-#' @param Lambda
-#' @param mu
-#' @param alpha
-#' @param Delta
-#' @param pi_h
-#' @param Sigma.diag
-#' @param col_mem
-#' @param cat_col_names
-#' @param bin_col_names
-#' @param count_col_names
-#' @param cont_col_names
-#' @param H
-#' @param Y
-#' @param z
-#' @param Fns
+#' Utilize posterior samples of Gaussian mixture copula parameters to generate a posterior
+#' predictive data set for missing data inference
+#'
+#' @param \code{n}: number of observations in posterior predictive data set
+#' @param \code{Lambda}: Posterior sample of factor loadings
+#' @param \code{mu}: List of length H containing posterior sample cluster specific mean vectors for latent factor \eqn{\eta}
+#' @param \code{alpha]: array(0,p), keep this way
+#' @param \code{Delta}: List of length H containing posterior sample of cluster specific covariance matrices for latent factor \eqn{\eta}
+#' @param \code{pi_h}: Posterior sample of cluster membership probabilities
+#' @param \code{Sigma.diag]: Posterior sample of error covariance
+#' @param \code{col_mem}: array of length p containing variable names
+#' @param \code{cat_col_names}: array containing names of categorical variables, with the number of repititions indicating eachs' number of levels
+#' @param \code{bin_col_names}: array containing names of binary variables
+#' @param \code{count_col_names}: array containing names of count-valued variables
+#' @param \code{cont_col_names}: array containing names of continous variables
+#' @param \code{dat}: Original data frame, useful for simulating predictive data sets
+#' @param \code{seed}: Seed for replication of results
+#' @param \code{H}: Upper bound for the number of clusters in finite mixture
+#' @param \code{Y}: Original data set
+#' @param \code{z}: Posterior sample of populated clusters, should be <= H
+#' @param \code{Fns}: Posterior sample of marginal distributions
+#' @param \code{seed}: seed for replication
 #'
 #' @return
+#' \itemize{
+#' \item \code{Y_pred}: Posterior predictive data set of specified size, \emph{with} margin adjustment
+#' \item \code{Y_pred_noMA}: Posterior predictive data set of specified size, \emph{without} margin adjustment. Empirical estimates are used in this case.}
+#' @import tmvtnorm
+#' @import mvtnorm
+#' @import LaplacesDemon
+#' @import truncnorm
+#' @import purrr
+#' @import MASS
+#' @import dplyr
+#' @import tidyr
+#' @import data.table
 #' @export
 #'
 #' @examples
+
+#' imps<-GMC_Impute(Data = X, nsamp = 1000)
+
+#' mu = lapply(1:25, function(x) return(imps$mus[[x]][500,]))
+#' alpha = rep(0,3)
+#' Delta = lapply(1:25, function(x) return(imps$Deltas[[x]][500,,]))
+#' Lambda = imps$Lambdas[500,,]
+#' pi_h = imps$pis[500,]
+#' Sigma.diag= imps$Sigmas[500,]
+#' col_mem = imps$col_mem
+#' cat_col_names = imps$cat_col_names
+#' bin_col_names = imps$bin_col_names
+#' count_col_names = imps$count_col_names
+#' cont_col_names = imps$con_col_names
+#' H = 25
+#' X= imps$dat
+#' z = imps$zs[500,]
+#' Fns = vector('list', 3)
+#' for(i in 1:3){ #formulate margin estimate
+#'  support = imps$Support[[i]][500,]
+#'  qs = imps$Quantiles[[i]][500,]
+#'  Fj = cbind(support,rep(0,length(support)),qs)
+#'  Fns[[i]] = Fj
+#'}
+
+#' Y = imps$dat
+#' H =25
+
+#'pred<- get_predictive_Y(n = dim(X)[1],
+#'                        Lambda,
+#'                        mu,
+#'                        alpha,
+#'                        Delta,
+#'                        pi_h,
+#'                        Sigma.diag,
+#'                        col_mem,
+#'                        cat_col_names, bin_col_names, count_col_names,cont_col_names,
+#'                        H,
+#'                        Y,
+#'                        z = z,
+#'                        Fns)
+#' plot(pred$Y_pred)
 get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
                            cat_col_names, bin_col_names, count_col_names,cont_col_names,
-                           H,Y,z, Fns){
+                           H,Y,z, Fns, seed = NULL){
 
+  if(is.null(seed)){
+    seed =sample(1:10000000,1)
+    set.seed(seed)
+  }else{
+    set.seed(seed)
+  }
 
   unique_z = which(z == 1)
 
@@ -643,9 +739,9 @@ get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
 
   means = t(sapply(1:n,function(x) alpha + Lambda%*%(etas[x,])))
 
-  Y_pred = data.frame(array(0,c(n,dim(Y)[2])))
+  Y_pred = Y_pred_noMA = data.frame(array(0,c(n,dim(Y)[2])))
 
-  colnames(Y_pred) = colnames(Y)
+  colnames(Y_pred) = colnames(Y_pred_noMA) = colnames(Y)
 
   for(col in unique(col_mem)){
 
@@ -664,7 +760,7 @@ get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
       impute_cat<- apply(probs, 1,function(x) sample(1:length(inds),1,replace = T,x))
       preds = factor(levels(Y[,col])[impute_cat], levels = levels(Y[,col]))
       Y_pred[,col] = preds
-
+      Y_pred_noMA[,col]= preds
 
     }
 
@@ -672,10 +768,9 @@ get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
       latent_z<- rnorm(n,means[,inds],sqrt(Sigma.diag[inds]))
       pred = factor(ifelse(latent_z<0,levels(Y[,col])[1], levels(Y[,col])[2]), levels = levels(Y[,col]))
       Y_pred[,col] = pred
-
+      Y_pred_noMA[,col] = pred
     }
     else if (col %in% count_col_names){
-
 
       latent_z<- rnorm(n,means[,inds],sqrt(Sigma.diag[inds]))
 
@@ -688,6 +783,17 @@ get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
                                                                            Lambda,
                                                                            Sigma.diag, inds),
                                  min = Fns[[inds]][2,1], max =max(Fns[[inds]][,1]))
+      Y_pred_noMA[,col] = quantile(Y[,col],
+                                   probs = (n/(n+1))*compute_mixprobs1(latent_z,
+                                                                       unique_z,
+                                                                       pi_h = pi_h,
+                                                                       Delta = Delta,
+                                                                       mu = mu,
+                                                                       alpha = alpha,
+                                                                       Lambda,
+                                                                       Sigma.diag, inds),
+                                   type = 1,
+                                   na.rm= T)
 
 
 
@@ -700,8 +806,9 @@ get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
       Fn_inv = splinefun(Fns[[inds]][,3],
                          Fns[[inds]][,1],
                          method = c("monoH.FC"))
-
+      #smoothed empirical estimate for noMA
       range = sort(unique(Y[,col]))
+      Fn_inv_noMA = splinefun(ecdf(Y[,col])(range),range, method = c("monoH.FC"))
 
 
       Y_pred[,col]= Fn_inv(compute_mixprobs1(latent_z,
@@ -713,6 +820,15 @@ get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
                                              Lambda,
                                              Sigma.diag,
                                              inds))
+      Y_pred_noMA[,col] = Fn_inv_noMA(compute_mixprobs1(latent_z,
+                                                        unique_z,
+                                                        pi_h = pi_h,
+                                                        Delta = Delta,
+                                                        mu = mu,
+                                                        alpha = alpha,
+                                                        Lambda,
+                                                        Sigma.diag,
+                                                        inds))
 
 
     }
@@ -720,7 +836,7 @@ get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
 
 
 
-  return(list(Y_pred = Y_pred))
+  return(list(Y_pred = Y_pred, Y_pred_noMA = Y_pred_noMA, seed = seed))
 
 }
 

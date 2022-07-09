@@ -2,7 +2,7 @@
 % Please edit documentation in R/Software.R
 \name{GMC_Impute}
 \alias{GMC_Impute}
-\title{Fit Gaussian mixture copula and impute missing data}
+\title{Fit Gaussian mixture copula with the margin adjustment and impute missing data}
 \usage{
 GMC_Impute(
   Data,
@@ -12,13 +12,14 @@ GMC_Impute(
   k.star = NULL,
   nsamp = 10000,
   burn = floor(0.5 * nsamp),
-  hyperparams = NULL
+  hyperparams = NULL,
+  seed = NULL
 )
 }
 \arguments{
 \item{Data}{Data frame that is the input into the Gaussian Mixture Copula. Categorical and  binary variables should be factors}
 
-\item{nImp}{Number of Imputations to Create}
+\item{nImp}{Number of imputations to Create}
 
 \item{Impute}{logical; Whether or not to create multiple imputations}
 
@@ -30,31 +31,52 @@ GMC_Impute(
 
 \item{burn}{Number of burn-in samples before imputations}
 
-\item{hyperparams}{Hyper parameter specifications}
+\item{hyperparams}{Optional; Hyperparameter specifications for finite mixuture and RPL
+ with default values given by:
+\itemize{
+\item \code{k.star}: dimension of latent factors, default is \code{floor(.7*p))}
+\item \code{plugin.threshold}: threshold for number of unique values in each column for the re-sampling step to be conducted,
+default is 350
+\item \code{a_alpha}: prior for the stick breaking precision parameter, where the prior is given by \code{gamma(a_alpha,b_alpha)},
+default value is 1
+\item \code{b_alpha}: prior for the stick breaking precision parameter, where the prior is given by \code{gamma(a_alpha,b_alpha)},
+default value is 3
+\item \code{nu_mix}: hyper parameter for the component specific prior \eqn{N-IW(0,I_{k.star},nu_mix,kappa_0)} on \eqn{\eta},
+default is k.star +2
+\item \code{kappa_0}: hyper parameter for the component specific prior \eqn{N-IW(0,I_{k.star},nu_mix,kappa_0)} on \eqn{\eta},
+default is .001
+\item \code{nu}: hyper parameter for local shrinkage of MGP prior on components of Lambda, default is 3
+\item \code{a1}: hyper parameter for global shrinkage of MGP prior on components of Lambda, default is 2
+\item \code{a2}: hyper parameter for global shrinkage of MGP prior on components of Lambda, default is 3
+\item \code{a.sigma,b.sigma}: hyper parameter for gamma prior on error variance, default value is 1 and 0.3
+\item \code{delta}: prior precision parameter for covariance matrix in latent mixture. Increase to discover fewer clusters.
+default value is 10
+\item \code{D_0}: prior covariance for N-IW. Default is a k.star dimenional identity
+}}
 }
 \value{
-a list with the following elements:
+A list with the following elements:
 \itemize{
 \item \code{Imputations} nImp complete data sets
-\item \code{Deltas} List of length H, each containing an Nsamp - burn x k.star x k.star array of
+\item \code{Deltas}: List of length H, each containing an \code{(nsamp - burn x k.star x k.star)} array of
  posterior samples of cluster specific covariance matrices
-\item \code{mus} List of length H, each containing an Nsamp-burn x k.star array of posterior samples of cluster
+\item \code{mus}: List of length H, each containing an \code{(nsamp-burn x k.star)} array of posterior samples of cluster
 specific covariance matrices
-\item \code{Sigmas} array of dimension (nsamp-burn x p)  containing posterior samples of the error covariance
-\item \code{Quantiles} List of length p, each containing an array of dimension (nsamp-burn x length(support)) with posterior samplees
-\item \code{z.hat} the estimated latent data (on the transformed scale) at the MLEs
-\item \code{residuals} the Dunn-Smyth residuals (randomized)
-\item \code{residuals_rep} the Dunn-Smyth residuals (randomized) for 10 replicates
-\item \code{logLik} the log-likelihood at the MLEs
-\item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
-\item \code{lambda} the Box-Cox nonlinear parameter
-\item and other parameters that
-(1) track the parameters across EM iterations and
-(2) record the model specifications
+\item \code{Sigmas}: array of dimension \code{(nsamp-burn x p)} containing posterior samples of the error covariance
+\item \code{Quantiles}:List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with posterior samples of point-wise cumulative probabilities.
+\item \code{Support}: List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with support of each variable
+\item \code{col_mem}: array of length p containing variable names
+\item \code{cat_col_names}: array containing names of categorical variables, with the number of repititions indicating eachs' number of levels
+\item \code{bin_col_names}: array containing names of binary variables
+\item \code{count_col_names}: array containing names of count-valued variables
+\item \code{cont_col_names}: array containing names of continous variables
+\item \code{dat}: Original data frame, useful for simulating predictive data sets
+\item \code{seed}: Seed for replication of results
 }
 }
 \description{
-The user specifies this and that
+Fit the Gaussian mixture copula to a data set with or without missing data.
+Return posterior samples of model parameters as well optional multiple imputations
 }
 \examples{
 num = 500
