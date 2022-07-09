@@ -1,5 +1,5 @@
 Package: GMCImpute
-Title: Estimate A Gaussian mixture copula, impute Missing Data, abd simulate predictive data sets
+Title: Estimate a Gaussian mixture copula, impute missing data, and simulate posterior predictive data sets
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Joe",
