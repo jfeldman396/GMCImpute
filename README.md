@@ -44,7 +44,7 @@ X[which(R[,2] == T),3] = NA
 We can visualize bias that the mechanism creates in
 *X*<sub>2</sub>, *X*<sub>3</sub> with the following plots.
 
-    ## Warning: Removed 232 rows containing missing values (geom_point).
+    ## Warning: Removed 229 rows containing missing values (geom_point).
 
 ![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
@@ -131,8 +131,6 @@ format.
 
 ## Visualizing Imputations:
 
-    ## Warning: Removed 2 rows containing missing values (geom_point).
-
 ![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ## Plotting posterior samples from the margin adjustment
@@ -168,15 +166,15 @@ predictive data sets for checks and inference. This is done by using the
 returned samples from GMC\_Impute
 
 ``` r
-#use the 2000th sample as an example
+#use the 3000th sample as an example
 
 #GMC parameters
-mu = lapply(1:25, function(x) return(imps$mus[[x]][200,]))
+mu = lapply(1:25, function(x) return(imps$mus[[x]][300,]))
 alpha = rep(0,3)
-Delta = lapply(1:25, function(x) return(imps$Deltas[[x]][200,,]))
-Lambda = imps$Lambdas[200,,]
-pi_h = imps$pis[200,]
-Sigma.diag= imps$Sigmas[200,]
+Delta = lapply(1:25, function(x) return(imps$Deltas[[x]][300,,]))
+Lambda = imps$Lambdas[300,,]
+pi_h = imps$pis[300,]
+Sigma.diag= imps$Sigmas[300,]
 #column names and memberships
 col_mem = imps$col_mem
 cat_col_names = imps$cat_col_names
@@ -185,11 +183,11 @@ count_col_names = imps$count_col_names
 cont_col_names = imps$con_col_names
 H = 25
 Y = imps$dat
-z = imps$zs[200,]
+z = imps$zs[300,]
 Fns = vector('list', 3) #format marginal distributions
 for(i in 1:3){
-  support = imps$Support[[i]][200,]
-  qs = imps$Quantiles[[i]][200,]
+  support = imps$Support[[i]][300,]
+  qs = imps$Quantiles[[i]][300,]
   Fj = cbind(support,rep(0,length(support)),qs)
   Fns[[i]] = Fj
   
@@ -215,7 +213,7 @@ pred<- get_predictive_Y(n = dim(Y)[1],
                           Y = Y,
                           z = z,
                           Fns = Fns,
-                          seed = 2)
+                          seed = 20)
 
 #plot results
 ggplot(pred$Y_pred, aes(x = X1, y = X2, color = X3))+
