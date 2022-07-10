@@ -1,7 +1,10 @@
 #' Fit Gaussian mixture copula with the margin adjustment and impute missing data
 #'
-#' Fit the Gaussian mixture copula to a data set with or without missing data.
-#' Return posterior samples of model parameters as well optional multiple imputations
+#' Fit the Gaussian mixture copula to a data set with or without missing data. The user is given control over whether or not to impute missing data.
+#' In addition, the user can specify several hyperparameters under the mixture, including the upper bound for the number of clusters in the truncated DP,
+#' the number of unique values for a variable for RPL re-sampling to take place, and components of the mixture and factor model.
+#'
+#' The function returns posterior samples of model parameters for posterior predictive checks, as well multiple completed data sets.
 #' @param Data Data frame that is the input into the Gaussian Mixture Copula. Categorical and  binary variables should be factors
 #' @param nImp Number of imputations to Create
 #' @param Impute logical; Whether or not to create multiple imputations
@@ -64,16 +67,17 @@
 #' @export
 #'
 #' @examples
-#' num = 500
-#' X1<-rnorm(num)
+#' num = 500 #sample size
+#' X1<-rnorm(num) # simulate data set
 #' X2<- rpois(num,5*abs(X1))
-# 'X3<- rbernoulli(num,pnorm(-.5+scale(X2)))
+#' X3<- rbernoulli(num,pnorm(-.5+scale(X2)))
+#' #remove values with missingness mechanism R
 #' R = t(sapply(1:num, function(x)rbernoulli(2, p = pnorm(-.5 + .5*abs(X1[x]))))) #change to -.25 for more missing
 #' X<- data.frame(X1,X2,X3)
 #' X_noMis = X
 #' X[which(R[,1] == T),2] = NA
 #' X[which(R[,2] == T),3] = NA
-#' imps<-GMC_Impute(Data = X, nsamp = 1000)
+#' imps<-GMC_Impute(Data = X, nsamp = 1000) #fit model
 
 
 GMC_Impute<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 10000, burn = floor(.5*nsamp),
