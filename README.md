@@ -44,7 +44,7 @@ X[which(R[,2] == T),3] = NA
 We can visualize bias that the mechanism creates in
 *X*<sub>2</sub>, *X*<sub>3</sub> with the following plots.
 
-    ## Warning: Removed 224 rows containing missing values (geom_point).
+    ## Warning: Removed 232 rows containing missing values (geom_point).
 
 ![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
