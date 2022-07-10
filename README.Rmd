@@ -2,7 +2,9 @@
 title: "The Gaussian Mixture Copula for Inference with Missing Data"
 author: "Joe Feldman"
 date: "7/10/2022"
-output: github_document
+output:
+  github_document:
+    pandoc_args: --webtex
 ---
 
 ```{r setup, include=FALSE}
@@ -12,7 +14,7 @@ library(gridExtra)
 library(purrr)
 ```
 # Installation
-```{r}
+```{r, warning=F}
 # library(devtools)
 # remotes::install_github('jfeldman396/GMCImpute')
 
@@ -25,7 +27,7 @@ Missing data is commonplace in survey and fused data sets, necessitating sophist
 
 Consider the following simulated example of a continuous variable $X_{1}$, a count variable $X_{2}$, and a binary variable $X_{3}$ simulated under the following dependence structure:
 
-$$ X_{1} \sim N(0,1)\\
+$$ X_{1} \sim N(0,1) \\
 X_{2} \mid X_{1} = x_{1} \sim Poisson(5 * \lvert x_{1} \rvert) \\
 X_{3} \mid X_{1} = x_{1}, X_{2} = x_{2} \sim Bernoulli(scale(x_{2}))$$
 
@@ -180,7 +182,7 @@ ggplot(imps$Imputations[[5]], aes(x = X1, y = X2, color = X3))+
 
 We can plot posterior samples of the marginal distribution of $X_{2}$, as well as point-wise posterior means:
 
-```{r, results='hide',message = F,fig.keep='all', cache = T}
+```{r, results='hide',message = F, cache = T}
   par(mar = c(5,6,4,2))
 range = range(imps$Support[[3]][1,2:18]) # get support
 quantiles = imps$Quantiles[[3]] #get quantiles
@@ -203,7 +205,7 @@ quantiles = imps$Quantiles[[3]] #get quantiles
 
 Finally, we can use the posterior samples to generative posterior predictive data sets for checks and inference. This is done by using the returned samples from GMC_Impute
 
-```{r post pred,results='hide',message = F,fig.keep='all', cache = T}
+```{r post pred,results='hide',message = F}
 #use the 2000th sample as an example
 
 #GMC parameters
@@ -250,7 +252,7 @@ pred<- get_predictive_Y(n = dim(Y)[1],
                           Y = Y,
                           z = z,
                           Fns = Fns,
-                          seed = 2)
+                          seed = 10)
 
 ```
 ```{r, echo = F}
