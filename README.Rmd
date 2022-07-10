@@ -26,7 +26,8 @@ Missing data is commonplace in survey and fused data sets, necessitating sophist
 Consider the following simulated example of a continuous variable $X_{1}$, a count variable $X_{2}$, and a binary variable $X_{3}$, where missing values in $X_{2}$ and $X_{3}$ are correlated to large values of $X_{1}$ in absolute value.
 
 
-```{r Data sim}
+```{r Data sim, cache = T}
+set.seed(47)
 num= 500
 X1<-rnorm(num)
 X2<- rpois(num,5*abs(X1))
@@ -228,7 +229,7 @@ pred<- get_predictive_Y(n = dim(Y)[1],
                           Y = Y,
                           z = z,
                           Fns = Fns,
-                          seed = 20)
+                          seed = 2)
 
 #plot results
 ggplot(pred$Y_pred, aes(x = X1, y = X2, color = X3))+

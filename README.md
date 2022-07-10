@@ -29,6 +29,7 @@ Consider the following simulated example of a continuous variable
 absolute value.
 
 ``` r
+set.seed(47)
 num= 500
 X1<-rnorm(num)
 X2<- rpois(num,5*abs(X1))
@@ -44,7 +45,7 @@ X[which(R[,2] == T),3] = NA
 We can visualize bias that the mechanism creates in
 *X*<sub>2</sub>, *X*<sub>3</sub> with the following plots.
 
-    ## Warning: Removed 229 rows containing missing values (geom_point).
+    ## Warning: Removed 211 rows containing missing values (geom_point).
 
 ![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
@@ -131,6 +132,8 @@ format.
 
 ## Visualizing Imputations:
 
+    ## Warning: Removed 1 rows containing missing values (geom_point).
+
 ![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ## Plotting posterior samples from the margin adjustment
@@ -213,7 +216,7 @@ pred<- get_predictive_Y(n = dim(Y)[1],
                           Y = Y,
                           z = z,
                           Fns = Fns,
-                          seed = 20)
+                          seed = 2)
 
 #plot results
 ggplot(pred$Y_pred, aes(x = X1, y = X2, color = X3))+
