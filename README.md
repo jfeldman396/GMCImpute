@@ -12,29 +12,6 @@ Joe Feldman
 library(GMCImpute)
 ```
 
-    ## Warning: replacing previous import 'data.table::last' by 'dplyr::last' when
-    ## loading 'GMCImpute'
-
-    ## Warning: replacing previous import 'data.table::first' by 'dplyr::first' when
-    ## loading 'GMCImpute'
-
-    ## Warning: replacing previous import 'MASS::select' by 'dplyr::select' when
-    ## loading 'GMCImpute'
-
-    ## Warning: replacing previous import 'data.table::between' by 'dplyr::between'
-    ## when loading 'GMCImpute'
-
-    ## Warning: replacing previous import 'LaplacesDemon::dmvt' by 'mvtnorm::dmvt' when
-    ## loading 'GMCImpute'
-
-    ## Warning: replacing previous import 'LaplacesDemon::rmvt' by 'mvtnorm::rmvt' when
-    ## loading 'GMCImpute'
-
-    ## Warning: replacing previous import 'LaplacesDemon::partial' by 'purrr::partial'
-    ## when loading 'GMCImpute'
-
-    ## Warning: replacing previous import 'data.table::transpose' by 'purrr::transpose'
-    ## when loading 'GMCImpute'
 
 # Background: Missing Data
 
@@ -63,14 +40,8 @@ X<- data.frame(X1,X2,X3)
 ```
 
 Next, we introduce a missingness mechanism **R** that creates bias
-across the data set by correlating missing values in *X*<sub>2</sub> and
-*X*<sub>3</sub> with *X*<sub>1</sub>. Specifically, if
-*R*<sub>*i**j*</sub> = 1, then
-*X*<sub>*i**j*</sub> = *m**i**s**s**i**n**g*. We use the following
-missingness mechanism in this example:
-
-*P*(*R*<sub>*i**j*</sub> = 1 ∣ *X*<sub>1</sub> = *x*<sub>1</sub>) = *B**e**r**n**o**u**l**l**i*( − 0.5 + 0.5 \* *Φ*(*x*<sub>1</sub>))
-Where *Φ* is the standard normal cdf.
+across the data set by correlating missing values in $$X\_{2}$$ and
+$$X\_{2}$$ with large values in absolute value of $$X\_{1}$$. 
 
 ``` r
 R = t(sapply(1:num, function(x)rbernoulli(2, p = pnorm(-.5 + .5*abs(X1[x]))))) 
@@ -84,7 +55,7 @@ We can visualize bias that the mechanism creates in
 values of *X*<sub>2</sub> and *X*<sub>3</sub> for large values of
 *X*<sub>1</sub> in absolute value.
 
-    ## Warning: Removed 239 rows containing missing values (geom_point).
+
 
 ![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- --> As a result,
 both margins are affected. We show a comparison of the empirical cdfs of
