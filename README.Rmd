@@ -186,7 +186,7 @@ Finally, we can use the posterior samples to generative a fixed quantity of post
 pred<- get_predictive_Y(mcmc,
                         nobs = dim(X)[1],
                         nsets = 2,
-                        seed = 2)
+                        seed = 10)
 
 #plot results
 grid.arrange(ggplot(pred$Y_pred[[1]], aes(x = X1, y = X2, color = X3))+

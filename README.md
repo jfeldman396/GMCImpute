@@ -66,11 +66,12 @@ aforementioned data types. The function then produces a user specified
 number of multiple imputations.
 
 Key to gaussian mixture copula are the marginal distributions of each
-variable in the data, as latent variables modeled with a finite mixture
+variable in the data, as latent variables, modeled with finite mixture
 are linked to the observed scale using the inverse marginal distribution
 function. Previous work estimates these margins empirically, which is
 problematic given that the missing data clearly biases these estimates.
-We demonstrate how the margin adjustment corrects these biases, which allows for more accurate inference with missing data
+The margin adjustment corrects these biases, yielding proper inference
+with missing data.
 
 # Fitting the model
 
@@ -119,7 +120,7 @@ hyperparams = list(delta = 10,
                    a.sigma = 1,
                    b.sigma = .3,
                    D_0 = diag(1,2))
-imps<-GMC_Impute(Data = X, nImp = 5,hyperparams = hyperparams, burn = 4500,nsamp = 5000, seed = 47)
+mcmc<-GMC.mcmc(Data = X, nImp = 5,hyperparams = hyperparams, burn = 1500,nsamp = 2000, seed = 47)
 ```
 
 `GMC_Impute` returns `nImp` imputations, as well as posterior samples of
@@ -141,86 +142,43 @@ We can plot posterior samples of the marginal distribution of
 *X*<sub>2</sub>, as well as point-wise posterior means:
 
 ``` r
-  par(mar = c(5,6,4,2))
-range = range(imps$Support[[3]][1,(2:dim(imps$Support[[3]])[2])]) # get support
-quantiles = imps$Quantiles[[3]] #get quantiles
- plot(range[1]:range[2],quantiles[1,2:(range[2]+2)],
-      col = "gray",
-      type = 'b',
-       xlab = expression(X[2]),
-       ylab = expression(P(X[2] <= x)),
-       main = "Posterior Samples of F_X2",
-       cex.lab = 1.5,
-       cex.main = 2)
-  sapply(2:500,function(x)points(range[1]:range[2],quantiles[x,2:(range[2]+2)], col ='gray', type = 'b'))
-  lines(ecdf(X_noMis$X2), cex = 2)
-  points(range[1]:range[2],colMeans(quantiles[2:500,2:(range[2]+2)]),pch =2, cex = 2)
-  lines(ecdf(X$X2), col = 2, cex = 2)
-    legend("bottomright",c("ECDF w/o Mis","ECDF w/ Mis","Posterior Mean"), pch = c(16,16,2),col = c(1,2,1),bty = 'n', cex = 1.3, text.font = 2)
+par(mar = c(5,6,4,2))
+range = range(mcmc$Support[[3]][1,(2:dim(mcmc$Support[[3]])[2])]) # get support
+quantiles = mcmc$Quantiles[[3]] #get quantiles
+plot(range[1]:range[2],quantiles[1,2:(range[2]+2)],
+    col = "gray",
+    type = 'b',
+     xlab = expression(X[2]),
+     ylab = expression(P(X[2] <= x)),
+     main = "Posterior Samples of F_X2",
+     cex.lab = 1.5,
+     cex.main = 2)
+sapply(2:500,function(x)points(range[1]:range[2],quantiles[x,2:(range[2]+2)], col ='gray', type = 'b'))
+lines(ecdf(X_noMis$X2), cex = 2)
+points(range[1]:range[2],colMeans(quantiles[2:500,2:(range[2]+2)]),pch =2, cex = 2)
+lines(ecdf(X$X2), col = 2, cex = 2)
+  legend("bottomright",c("ECDF w/o Mis","ECDF w/ Mis","Posterior Mean"), pch = c(16,16,2),col = c(1,2,1),bty = 'n', cex = 1.3, text.font = 2)
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 # Simulating Predictive Data Sets
 
-Finally, we can use the posterior samples to generative posterior
-predictive data sets for checks and inference. This is done by using the
-returned samples from GMC\_Impute
+Finally, we can use the posterior samples to generative a fixed quantity
+of posterior predictive data sets for checks and inference. This is done
+by using the returned samples from GMC.mcmc. Here we create two
+predictive data sets.
 
 ``` r
-#use the 3000th sample as an example
-
-#GMC parameters
-mu = lapply(1:25, function(x) return(imps$mus[[x]][300,]))
-alpha = rep(0,3)
-Delta = lapply(1:25, function(x) return(imps$Deltas[[x]][300,,]))
-Lambda = imps$Lambdas[300,,]
-pi_h = imps$pis[300,]
-Sigma.diag= imps$Sigmas[300,]
-#column names and memberships
-col_mem = imps$col_mem
-cat_col_names = imps$cat_col_names
-bin_col_names = imps$bin_col_names
-count_col_names = imps$count_col_names
-cont_col_names = imps$con_col_names
-H = 25
-Y = imps$dat
-z = imps$zs[300,]
-Fns = vector('list', 3) #format marginal distributions
-for(i in 1:3){
-  support = imps$Support[[i]][300,]
-  qs = imps$Quantiles[[i]][300,]
-  Fj = cbind(support,rep(0,length(support)),qs)
-  Fns[[i]] = Fj
-  
-}
-
-Y = imps$dat #for 
-H =25
-
-#simulate predictive data set
-pred<- get_predictive_Y(n = dim(Y)[1],
-                          Lambda = Lambda,
-                          mu = mu,
-                          alpha = alpha,
-                          Delta = Delta,
-                          pi_h = pi_h,
-                          Sigma.diag = Sigma.diag,
-                          col_mem = col_mem,
-                          cat_col_names = cat_col_names,
-                          bin_col_names = bin_col_names, 
-                          count_col_names = count_col_names,
-                          cont_col_names = cont_col_names,
-                          H = H,
-                          Y = Y,
-                          z = z,
-                          Fns = Fns,
-                          seed = 2)
+pred<- get_predictive_Y(mcmc,
+                        nobs = dim(X)[1],
+                        nsets = 2,
+                        seed = 10)
 
 #plot results
-ggplot(pred$Y_pred, aes(x = X1, y = X2, color = X3))+
+grid.arrange(ggplot(pred$Y_pred[[1]], aes(x = X1, y = X2, color = X3))+
                geom_point() +
-               ggtitle("Posterior Predictive Data Set")+
+               ggtitle("Posterior Predictive Data Set #1")+
                xlab(expression(X[1]))+
                ylab(expression(X[2]))+
                scale_color_discrete(name = expression(X[3]),
@@ -228,7 +186,19 @@ ggplot(pred$Y_pred, aes(x = X1, y = X2, color = X3))+
                theme(axis.text = element_text(size = 12, face = "bold"),
                      axis.title = element_text(size = 14, face = "bold"),
                      legend.title= element_text(size = 14, face = "bold"),
-                     plot.title = element_text(size = 16, face = "bold"))
+                     plot.title = element_text(size = 16, face = "bold")),
+
+ggplot(pred$Y_pred[[2]], aes(x = X1, y = X2, color = X3))+
+               geom_point() +
+               ggtitle("Posterior Predictive Data Set #2")+
+               xlab(expression(X[1]))+
+               ylab(expression(X[2]))+
+               scale_color_discrete(name = expression(X[3]),
+                                    labels = c(0,1))+
+               theme(axis.text = element_text(size = 12, face = "bold"),
+                     axis.title = element_text(size = 14, face = "bold"),
+                     legend.title= element_text(size = 14, face = "bold"),
+                     plot.title = element_text(size = 16, face = "bold")), ncol = 1)
 ```
 
 ![](README_files/figure-gfm/post%20pred-1.png)<!-- -->
