@@ -170,6 +170,7 @@ by using the returned samples from GMC.mcmc. Here we create two
 predictive data sets.
 
 ``` r
+#get predictive data sets
 pred<- get_predictive_Y(mcmc,
                         nobs = dim(X)[1],
                         nsets = 2,

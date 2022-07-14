@@ -182,7 +182,7 @@ lines(ecdf(X$X2), col = 2, cex = 2)
 Finally, we can use the posterior samples to generative a fixed quantity of posterior predictive data sets for checks and inference. This is done by using the returned samples from GMC.mcmc. Here we create two predictive data sets.
 
 ```{r post pred,message = F}
-
+#get predictive data sets
 pred<- get_predictive_Y(mcmc,
                         nobs = dim(X)[1],
                         nsets = 2,
