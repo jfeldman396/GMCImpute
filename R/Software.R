@@ -1,8 +1,10 @@
 #' Fit Gaussian mixture copula with the margin adjustment and impute missing data
 #'
-#' Fit the Gaussian mixture copula to a data set with or without missing data. The user is given control over whether or not to impute missing data.
-#' In addition, the user can specify several hyperparameters under the mixture, including the upper bound for the number of clusters in the truncated DP,
-#' the number of unique values for a variable for RPL re-sampling to take place, and components of the mixture and factor model.
+#' Fit the Gaussian mixture copula to a data set with or without missing data. The user does not have to deal with one-hot-encoding of categorical variables,
+#' which is accomplished by the function. The MCMC non-parametrically estimates marginal distributions through the margin adjustment.
+#' The user is given control over whether or not to impute missing data through the logical \code{Impute} and then how many completed data sets to produce with \code{nImp}.
+#' In addition, the user can specify several hyperparameters under the latent mixture, including the upper bound for the number of clusters in the truncated DP,
+#' the number of unique values of a variable for RPL re-sampling to take place, and prior precision of cluster specific covariance matrices.
 #'
 #' The function returns posterior samples of model parameters for posterior predictive checks, as well multiple completed data sets.
 #' @param Data Data frame that is the input into the Gaussian Mixture Copula. Categorical and  binary variables should be factors
@@ -53,7 +55,9 @@
 #' \item \code{cont_col_names}: array containing names of continous variables
 #' \item \code{dat}: Original data frame, useful for simulating predictive data sets
 #' \item \code{seed}: Seed for replication of results
+#' \item \code{Y_aug}: augmented data set with binary representation of categorical variables.
 #' }
+#'
 #'
 #' @import tmvtnorm
 #' @import mvtnorm
@@ -77,10 +81,10 @@
 #' X_noMis = X
 #' X[which(R[,1] == T),2] = NA
 #' X[which(R[,2] == T),3] = NA
-#' imps<-GMC_Impute(Data = X, nsamp = 1000) #fit model
+#' mcmc<-GMC.mcmc(Data = X, nsamp = 1000) #fit model
 
 
-GMC_Impute<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 10000, burn = floor(.5*nsamp),
+GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 10000, burn = floor(.5*nsamp),
                       hyperparams = NULL, seed = NULL){
 
   if(any(sapply(colnames(Data), function(x) is.character(Data[,x])))){
@@ -628,6 +632,7 @@ GMC_Impute<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp =
               count_col_names = count_col_names,
               cont_col_names = cont_col_names,
               dat = Y,
+              Y_aug = Y_mod,
               seed = seed))
 
 
@@ -638,32 +643,24 @@ GMC_Impute<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp =
 #' Generate a posterior predictive data set
 #'
 #' Utilize posterior samples of Gaussian mixture copula parameters to generate a posterior
-#' predictive data set for missing data inference
+#' predictive data set for missing data inference. Each posterior predictive data set is
+#' constructed with one radomly selected sample from the posterior of GMC parameters.
 #'
-#' @param \code{n}: number of observations in posterior predictive data set
-#' @param \code{Lambda}: Posterior sample of factor loadings
-#' @param \code{mu}: List of length H containing posterior sample cluster specific mean vectors for latent factor \eqn{\eta}
-#' @param \code{alpha]: array(0,p), keep this way
-#' @param \code{Delta}: List of length H containing posterior sample of cluster specific covariance matrices for latent factor \eqn{\eta}
-#' @param \code{pi_h}: Posterior sample of cluster membership probabilities
-#' @param \code{Sigma.diag]: Posterior sample of error covariance
-#' @param \code{col_mem}: array of length p containing variable names
-#' @param \code{cat_col_names}: array containing names of categorical variables, with the number of repititions indicating eachs' number of levels
-#' @param \code{bin_col_names}: array containing names of binary variables
-#' @param \code{count_col_names}: array containing names of count-valued variables
-#' @param \code{cont_col_names}: array containing names of continous variables
-#' @param \code{dat}: Original data frame, useful for simulating predictive data sets
-#' @param \code{seed}: Seed for replication of results
-#' @param \code{H}: Upper bound for the number of clusters in finite mixture
-#' @param \code{Y}: Original data set
-#' @param \code{z}: Posterior sample of populated clusters, should be <= H
-#' @param \code{Fns}: Posterior sample of marginal distributions
+#' @param \code{mcmcobj}: fitted GMC mcmc object from the function \code{GMC.mcmc}
+#' @param \code{nobs}: number of observations in the posterior predictive data set, default is \code{nrow(data)}
+#' @param \code{nsets}: number of posterior predictive data sets to create
 #' @param \code{seed}: seed for replication
+#'
 #'
 #' @return
 #' \itemize{
-#' \item \code{Y_pred}: Posterior predictive data set of specified size, \emph{with} margin adjustment
-#' \item \code{Y_pred_noMA}: Posterior predictive data set of specified size, \emph{without} margin adjustment. Empirical estimates are used in this case.}
+#' \item \code{Y_pred}: A list of length \code{nets} containing posterior predictive data sets with \code{nobs} observations.
+#' These data sets are constructed \emph{with} the margin adjustment
+#' \item \code{Y_pred_noMA}:  A list of length \code{nets} containing posterior predictive data sets with \code{nobs} observations.
+#' These data sets are constructed \emph{without} the margin adjustment. In this case empirical distribution functions are used
+#' for count variables, and smoothed empirical distributions are used for continuous variables.
+#' \item \code{seed}: seed for replication
+#' }
 #' @import tmvtnorm
 #' @import mvtnorm
 #' @import LaplacesDemon
@@ -677,50 +674,17 @@ GMC_Impute<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp =
 #'
 #' @examples
 
-#' imps<-GMC_Impute(Data = X, nsamp = 1000)
-
-#' mu = lapply(1:25, function(x) return(imps$mus[[x]][500,]))
-#' alpha = rep(0,3)
-#' Delta = lapply(1:25, function(x) return(imps$Deltas[[x]][500,,]))
-#' Lambda = imps$Lambdas[500,,]
-#' pi_h = imps$pis[500,]
-#' Sigma.diag= imps$Sigmas[500,]
-#' col_mem = imps$col_mem
-#' cat_col_names = imps$cat_col_names
-#' bin_col_names = imps$bin_col_names
-#' count_col_names = imps$count_col_names
-#' cont_col_names = imps$con_col_names
-#' H = 25
-#' X= imps$dat
-#' z = imps$zs[500,]
-#' Fns = vector('list', 3)
-#' for(i in 1:3){ #formulate margin estimate
-#'  support = imps$Support[[i]][500,]
-#'  qs = imps$Quantiles[[i]][500,]
-#'  Fj = cbind(support,rep(0,length(support)),qs)
-#'  Fns[[i]] = Fj
-#'}
-
-#' Y = imps$dat
-#' H =25
-
-#'pred<- get_predictive_Y(n = dim(X)[1],
-#'                        Lambda,
-#'                        mu,
-#'                        alpha,
-#'                        Delta,
-#'                        pi_h,
-#'                        Sigma.diag,
-#'                        col_mem,
-#'                        cat_col_names, bin_col_names, count_col_names,cont_col_names,
-#'                        H,
-#'                        Y,
-#'                        z = z,
-#'                        Fns)
-#' plot(pred$Y_pred)
-get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
-                           cat_col_names, bin_col_names, count_col_names,cont_col_names,
-                           H,Y,z, Fns, seed = NULL){
+#' mcmc<-GMC.mcmc(Data = X, nsamp = 1000)
+#'pred<- get_predictive_Y(mcmc,
+#'                        nsets = 1,
+#'                        nobs = dim(X)[1],
+#'                        seed = 2)
+#' plot(pred$Y_pred[[1]])
+#'
+get_predictive_Y<-function(mcmc,
+                           nobs,
+                           nsets,
+                           seed = NULL){
 
   if(is.null(seed)){
     seed =sample(1:10000000,1)
@@ -728,6 +692,48 @@ get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
   }else{
     set.seed(seed)
   }
+
+  Y = mcmc$dat #for data formatting
+  Y_aug = mcmc$Y_aug
+  p = dim(Y_aug)[2]
+  H = dim(mcmc$zs)[2] # upper bound for number of clusters in mixtures
+  n = nobs
+  nsamps = dim(mcmc$Sigmas)[1] #number of posterior samples from mcmc fit
+  postsamps = sample(1:nsamps,size = nsets, replace = F)
+  if(nsamps < nsets){
+    stop('Number of posterior predictive data sets exceeds number of posterior samples')
+  }
+
+
+  pred_datasets = pred_datasets.noMA = vector('list', nsets)
+
+  for(i in 1:nsets){
+
+    # get posterior sample of mixture model parameters
+    mu = lapply(1:H, function(x) return(mcmc$mus[[x]][postsamps[i],]))
+    alpha = rep(0,p)
+    Delta = lapply(1:H, function(x) return(mcmc$Deltas[[x]][postsamps[i],,]))
+    Lambda = mcmc$Lambdas[postsamps[i],,]
+    pi_h = mcmc$pis[postsamps[i],]
+    Sigma.diag= mcmc$Sigmas[postsamps[i],]
+    z = mcmc$zs[postsamps[i],]
+    #column names and memberships
+    col_mem = mcmc$col_mem
+    cat_col_names = mcmc$cat_col_names
+    bin_col_names = mcmc$bin_col_names
+    count_col_names = mcmc$count_col_names
+    cont_col_names = mcmc$con_col_names
+
+    Fns = vector('list', p) #format marginal distributions
+    for(j in 1:p){
+      support = mcmc$Support[[j]][postsamps[i],]
+      qs = mcmc$Quantiles[[j]][postsamps[i],]
+      Fj = cbind(support,rep(0,length(support)),qs)
+      Fns[[j]] = Fj
+
+  }
+
+
 
   unique_z = which(z == 1)
 
@@ -835,12 +841,17 @@ get_predictive_Y<-function(n,Lambda, mu,alpha,Delta, pi_h, Sigma.diag,  col_mem,
                                                         inds))
 
 
+      }
     }
+
+  pred_datasets[[i]] = Y_pred
+  pred_datasets.noMA[[i]] = Y_pred_noMA
+
   }
 
 
 
-  return(list(Y_pred = Y_pred, Y_pred_noMA = Y_pred_noMA, seed = seed))
+  return(list(Y_pred = pred_datasets, Y_pred_noMA = pred_datasets.noMA, seed = seed))
 
 }
 
