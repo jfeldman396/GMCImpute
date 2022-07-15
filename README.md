@@ -171,9 +171,9 @@ predictive data sets.
 
 ``` r
 #get predictive data sets
-pred<- get_predictive_Y(mcmc,
-                        nobs = dim(X)[1],
-                        nsets = 2,
+pred<- get_predictive_Y(mcmc, # GMC mcmc object
+                        nobs = dim(X)[1], # number of observations in predictive data set; we use n = dim(X)[1]
+                        nsets = 2, # number of predictive data sets to create
                         seed = 10)
 
 #plot results
