@@ -65,9 +65,8 @@ extended rank-probit likelihood, which enables copula estimation on the
 aforementioned data types. The function then produces a user specified
 number of multiple imputations.
 
-Key to gaussian mixture copula are the marginal distributions of each
-variable in the data, as latent variables, modeled with finite mixture
-are linked to the observed scale using the inverse marginal distribution
+Key to the Gaussian mixture copula are the marginal distributions of each
+variable in the data, as latent variables are linked to the observed scale using the inverse marginal distribution
 function. Previous work estimates these margins empirically, which is
 problematic given that the missing data clearly biases these estimates.
 The margin adjustment corrects these biases, yielding proper inference
