@@ -510,7 +510,7 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
 
             if(all(Y_mod[!is.na(Y_mod[,x]),x]%%1 == 0)){
               if(min(Y_mod[,x], na.rm = T)>=0)
-                Fns[[x]] = fill_in_gaps_cdf(max(min(Y_mod[,x], na.rm = T),0),max(Y_mod[,x], na.rm = T),wts)$cdf
+                Fns[[x]] = fill_in_gaps_cdf(max(min(Y_mod[,x], na.rm = T),0),max(Y_mod[,x], na.rm = T) + 3,wts)$cdf
             }else{
               Fns[[x]] = fill_in_gaps_cdf(min(Y_mod[,x], na.rm = T)-5,max(Y_mod[,x], na.rm = T),wts)$cdf
             }
