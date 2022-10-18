@@ -156,11 +156,13 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
   colnames(Y_mod)<-vnames
 
   #initialize latent Z
-  Z<-NULL
   R<- NULL
-  for(j in 1:p) { Z<-cbind(Z, scale(Y_mod[,j])) }
   for(j in 1:p) { R<-cbind(R, match(Y_mod[,j],sort(unique(Y_mod[,j])))) }
   Rlevels<-apply(R,2,max,na.rm=TRUE)
+  Ranks <- apply(Y_mod, 2, rank, ties.method = "max", na.last = "keep")
+  N <- apply(!is.na(Ranks), 2, sum)
+  U <- t(t(Ranks)/(N + 1))
+  Z <- qnorm(U)
   Z[which(is.na(Y_mod),arr.ind = T)] = 0
 
   # Hyperparameters for DP mixture
