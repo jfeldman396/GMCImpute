@@ -62,8 +62,7 @@ A list with the following elements:
  posterior samples of cluster specific covariance matrices
 \item \code{mus}: List of length H, each containing an \code{(nsamp-burn x k.star)} array of posterior samples of cluster
 specific covariance matrices
-\item \code{zs}: Binary matrix of dimension \code{(nsamp-burn x H)} containing indicators of which clusters are occupied
-\item \code{pis}: Matrix of dimension \code{(nsamp-burn x H)} containing cluster membership probabilities
+\item \code{zs}: Indicies of occupied clusters
 \item \code{Sigmas}: array of dimension \code{(nsamp-burn x p)} containing posterior samples of the error covariance
 \item \code{Quantiles}:List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with posterior samples of point-wise cumulative probabilities.
 \item \code{Support}: List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with support of each variable
