@@ -45,8 +45,7 @@
 #'  posterior samples of cluster specific covariance matrices
 #' \item \code{mus}: List of length H, each containing an \code{(nsamp-burn x k.star)} array of posterior samples of cluster
 #' specific covariance matrices
-#' \item \code{zs}: Binary matrix of dimension \code{(nsamp-burn x H)} containing indicators of which clusters are occupied
-#' \item \code{pis}: Matrix of dimension \code{(nsamp-burn x H)} containing cluster membership probabilities
+#' \item \code{zs}: Indicies of occupied clusters
 #' \item \code{Sigmas}: array of dimension \code{(nsamp-burn x p)} containing posterior samples of the error covariance
 #' \item \code{Quantiles}:List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with posterior samples of point-wise cumulative probabilities.
 #' \item \code{Support}: List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with support of each variable
@@ -156,13 +155,11 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
   colnames(Y_mod)<-vnames
 
   #initialize latent Z
+  Z<-NULL
   R<- NULL
+  for(j in 1:p) { Z<-cbind(Z, scale(Y_mod[,j])) }
   for(j in 1:p) { R<-cbind(R, match(Y_mod[,j],sort(unique(Y_mod[,j])))) }
   Rlevels<-apply(R,2,max,na.rm=TRUE)
-  Ranks <- apply(Y_mod, 2, rank, ties.method = "max", na.last = "keep")
-  N <- apply(!is.na(Ranks), 2, sum)
-  U <- t(t(Ranks)/(N + 1))
-  Z <- qnorm(U)
   Z[which(is.na(Y_mod),arr.ind = T)] = 0
 
   # Hyperparameters for DP mixture
@@ -512,7 +509,7 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
 
             if(all(Y_mod[!is.na(Y_mod[,x]),x]%%1 == 0)){
               if(min(Y_mod[,x], na.rm = T)>=0)
-                Fns[[x]] = fill_in_gaps_cdf(max(min(Y_mod[,x], na.rm = T),0),max(Y_mod[,x], na.rm = T) + 3,wts)$cdf
+                Fns[[x]] = fill_in_gaps_cdf(max(min(Y_mod[,x], na.rm = T),0),max(Y_mod[,x], na.rm = T),wts)$cdf
             }else{
               Fns[[x]] = fill_in_gaps_cdf(min(Y_mod[,x], na.rm = T)-5,max(Y_mod[,x], na.rm = T),wts)$cdf
             }
