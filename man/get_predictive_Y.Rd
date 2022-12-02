@@ -17,9 +17,9 @@ get_predictive_Y(mcmc, nobs, nsets, seed = NULL)
 }
 \value{
 \itemize{
-\item \code{Y_pred}: A list of length \code{nets} containing posterior predictive data sets with \code{nobs} observations.
+\item \code{Y_pred}: A list of length \code{nsets} containing posterior predictive data sets with \code{nobs} observations.
 These data sets are constructed \emph{with} the margin adjustment
-\item \code{Y_pred_noMA}:  A list of length \code{nets} containing posterior predictive data sets with \code{nobs} observations.
+\item \code{Y_pred_noMA}:  A list of length \code{nsets} containing posterior predictive data sets with \code{nobs} observations.
 These data sets are constructed \emph{without} the margin adjustment. In this case empirical distribution functions are used
 for count variables, and smoothed empirical distributions are used for continuous variables.
 \item \code{seed}: seed for replication
