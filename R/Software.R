@@ -75,7 +75,7 @@
 #' num = 500 #sample size
 #' X1<-rnorm(num) # simulate data set
 #' X2<- rpois(num,5*abs(X1))
-#' X3<- rbernoulli(num,pnorm(-.5+scale(X2)))
+#' X3<- rbernoulli(num,1,pnorm(-.5+scale(X2)))
 #' #remove values with missingness mechanism R
 #' R = t(sapply(1:num, function(x)rbernoulli(2, p = pnorm(-.5 + .5*abs(X1[x]))))) #change to -.25 for more missing
 #' X<- data.frame(X1,X2,X3)
@@ -655,9 +655,9 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
 #'
 #' @return
 #' \itemize{
-#' \item \code{Y_pred}: A list of length \code{nets} containing posterior predictive data sets with \code{nobs} observations.
+#' \item \code{Y_pred}: A list of length \code{nsets} containing posterior predictive data sets with \code{nobs} observations.
 #' These data sets are constructed \emph{with} the margin adjustment
-#' \item \code{Y_pred_noMA}:  A list of length \code{nets} containing posterior predictive data sets with \code{nobs} observations.
+#' \item \code{Y_pred_noMA}:  A list of length \code{nsets} containing posterior predictive data sets with \code{nobs} observations.
 #' These data sets are constructed \emph{without} the margin adjustment. In this case empirical distribution functions are used
 #' for count variables, and smoothed empirical distributions are used for continuous variables.
 #' \item \code{seed}: seed for replication
@@ -700,11 +700,10 @@ get_predictive_Y<-function(mcmc,
   H = dim(mcmc$zs)[2] # upper bound for number of clusters in mixtures
   n = nobs
   nsamps = dim(mcmc$Sigmas)[1] #number of posterior samples from mcmc fit
-  postsamps = sample(1:nsamps,size = nsets, replace = F)
   if(nsamps < nsets){
     stop('Number of posterior predictive data sets exceeds number of posterior samples')
   }
-
+  postsamps = sample(1:nsamps,size = nsets, replace = F)
 
   pred_datasets = pred_datasets.noMA = vector('list', nsets)
 

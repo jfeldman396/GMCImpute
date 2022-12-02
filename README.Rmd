@@ -13,8 +13,8 @@ library(purrr)
 ```
 # Installation
 ```{r, warning=F}
-# library(devtools)
-# remotes::install_github('jfeldman396/GMCImpute')
+library(devtools)
+remotes::install_github('jfeldman396/GMCImpute', force = T)
 
 library(GMCImpute)
 ```
