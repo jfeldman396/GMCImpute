@@ -46,6 +46,7 @@
 #' \item \code{mus}: List of length H, each containing an \code{(nsamp-burn x k.star)} array of posterior samples of cluster
 #' specific covariance matrices
 #' \item \code{zs}: Indicies of occupied clusters of dimension \code{(nsamp-burn x H)}. Used for posterior predictive sampling to identify which components of the mixture to use
+#' \item \code{clustering}: Posterior samples of size \code{(nsamp-burn x n)} with discovered clusterings
 #' \item \code{Sigmas}: array of dimension \code{(nsamp-burn x p)} containing posterior samples of the error covariance
 #' \item \code{Quantiles}:List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with posterior samples of point-wise cumulative probabilities.
 #' \item \code{Support}: List of length p, each containing an array of dimension \code{(nsamp-burn x length(support))} with support of each variable
