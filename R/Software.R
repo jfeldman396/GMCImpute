@@ -281,6 +281,7 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
   Lambdas<- array(0, c(nsamp-burn, p, k.star))
   pis<- array(0, c(nsamp-burn,H))
   zs<-array(0, c(nsamp-burn,H))
+  clustering<-array(0,c(nsamp-burn,n))
   quantiles= support = vector('list', p)
   Imputations<- vector('list', nImp)
   indexer = 1
@@ -533,6 +534,7 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
       pis[ns-burn,] = pi_h
       occupied = as.numeric(names(table(z)))
       zs[ns-burn,occupied] = 1
+      clustering[ns-burn,] = z
 
 
       if(ns%%impevery == 0 & Impute == T){
@@ -623,6 +625,7 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
               mus = mus,
               pis = pis,
               zs = zs,
+              clustering = clustering,
               Sigmas = Sigmas,
               Lambdas = Lambdas,
               Quantiles = quantiles,
