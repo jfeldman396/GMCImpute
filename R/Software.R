@@ -746,9 +746,9 @@ get_predictive_Y<-function(mcmc,
     etas = NULL
     #need to fix this
 
-    etas = do.call(rbind, t(sapply(unique(cs),function(x) return(rbind(etas,
+    etas = data.frame(do.call(rbind, t(sapply(unique(cs),function(x) return(rbind(etas,
                                                                        mvrnorm(sum(cs == x),mu[[x]],
-                                                                               Delta[[x]]))))))
+                                                                               Delta[[x]])))))))
 
 
   }else{
