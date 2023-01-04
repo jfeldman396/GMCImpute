@@ -744,9 +744,11 @@ get_predictive_Y<-function(mcmc,
   if(length(unique(z))>1){
     cs<- sample(unique_z, n, replace = T, prob =  pi_h[unique_z])
     etas = NULL
-    etas = do.call(rbind, t(sapply(unique(cs),function(x) return(rbind(etas,
+    #need to fix this
+    etas = do.call(rbind, data.frame(t(sapply(unique(cs),function(x) return(rbind(etas,
                                                                        mvrnorm(sum(cs == x),mu[[x]],
-                                                                               Delta[[x]]))))))
+                                                                               Delta[[x]])))))))
+
   }else{
     etas = mvrnorm(n,mu[[unique_z]], Delta[[unique_z]])
   }

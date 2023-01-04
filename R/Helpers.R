@@ -42,6 +42,7 @@ format_data<-function(Y,factor.cols){
 
   Y_mod<- cbind(cat,Y[,-factor.cols])
   col_mem = c(cat_col_names,bin_col_names,colnames(Y_mod)[(one.hot.cols+1):ncol(Y_mod)])# data frame used for sampler
+  #Y_mod_comp = Y_mod %>% tidyr::drop_na() #complete observations
   return(list( cat_col_names = cat_col_names,
                bin_col_names = bin_col_names, col_mem = col_mem))
 }
