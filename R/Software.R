@@ -254,7 +254,7 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
   prob_h =  array(0, c(n, H))
 
   # Naive initialization for labels:
-  z = sample(1:H, n, replace = TRUE)
+  z = sample(1:H, n, replace = TRUE, prob = rep(1/H, H))
 
   # Initialize the other parameters, given labels:
   n_h = sapply(1:H, function(h) sum(z==h))
@@ -263,8 +263,8 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
   pi_h = rep(1, H); pi_h[1] = V_h[1]; pi_h[-1] = sapply(2:H, function(h) V_h[h]*prod(1 - V_h[1:(h-1)]))
 
   #initialize eta cluster paramters
-  mu = lapply(1:H, function(h) colMeans(eta[z==h,]))
-  Delta = lapply(1:H, function(h) diag(1,k.star))
+  mu = lapply(1:H, function(h) if(!is.null(dim(eta[z==h,]))){colMeans(eta[z==h,])}else{eta[z==h,]})
+  Delta = lapply(1:H, function(h) cov(eta[z==h,]))
 
   #for arranging categorical variables
   factor_order = format_data(Y, factor.cols)
