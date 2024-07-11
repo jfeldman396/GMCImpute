@@ -499,7 +499,7 @@ GMC.mcmc<- function(Data, nImp = 10, Impute = T,H = 25, k.star = NULL, nsamp = 1
     }
 
 
-    if(ns>=burn){
+    if(ns> burn){
       #compute margins
       Fns = vector("list",p)
       for( x in 1:p){
